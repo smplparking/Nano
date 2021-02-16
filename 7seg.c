@@ -12,6 +12,7 @@
 bool _exceedsDisplay = false; // Variable to control plus sign on display
 
 void ms_delay(int N) {
+    
     T1CON = 0x8030; // Timer 1 On, prescale 1:256, Tcy as clock
     TMR1 = 0; // Reset TMR1 to zero
     while (TMR1 < N * 62.5) {

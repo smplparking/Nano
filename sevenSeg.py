@@ -22,14 +22,14 @@ def ms_delay(N):
 
 def reset():
     spi.open(bus, device)
-    spi.xfer(0x81)
+    spi.xfer([0x81])
 
 
 def updateDisplay(count):
     # SPI Communication w/ 7segs
     spi.open(0, 0)  # open spi comms
     if not bigboard:
-        spi.xfer(0x76)  # clear display
+        spi.xfer([0x76])  # clear display
     to_send = [count % 10, (count//10) % 10]  # LSD, MSD
     if bigboard:
         to_send = [getDisplayCode(x)
@@ -43,5 +43,6 @@ def updateDisplay(count):
 reset()
 
 for i in range(100):
-    updateDisplay(7)
+    print(f'displaying {i}')
+    updateDisplay(i)
     sleep(5)

@@ -15,13 +15,13 @@ default_app = firebase_admin.initialize_app()
 # see: https://firebase.google.com/docs/admin/setup#python_1
 
 # # Add a new document
-db = firestore.Client()
-doc_ref = db.collection(u'users').document(u'alovelace')
-doc_ref.set({
-    u'first': u'Ada',
-    u'last': u'Lovelace',
-    u'born': 1815
-})
+# db = firestore.Client()
+#doc_ref = db.collection(u'users').document(u'alovelace')
+#doc_ref.set({
+  #  u'first': u'Ada',
+  #  u'last': u'Lovelace',
+  #  u'born': 1815
+#})
 
 # # Then query for documents
 # users_ref = db.collection(u'users')
@@ -43,4 +43,4 @@ def updateDatabase(garage):
     return count
 
 
-updateDatabase('Schrank')
+updateDatabase('Admin')

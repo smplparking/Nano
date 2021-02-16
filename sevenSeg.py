@@ -1,5 +1,9 @@
-import spidev
 from time import sleep
+import spidev
+import Jetson.GPIO as GPIO
+
+# pin definitions
+SCK =
 BCD = [63, 6, 91, 79, 102, 109, 125, 7, 127, 111]
 
 

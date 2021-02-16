@@ -11,6 +11,10 @@ def us_delay(N):
     sleep(N/1000000.0)
 
 
+def ms_delay(N):
+    sleep(N/1000.0)
+
+
 def updateDisplay(count):
     # SPI Communication w/ 7segs
     spi = spidev.SpiDev()  # init spi comms

@@ -3,6 +3,7 @@ import board
 import busio
 import digitalio
 from time import sleep
+from constants import SevenSegmentASCII
 BCD = [63, 6, 91, 79, 102, 109, 125, 7, 127, 111]
 
 
@@ -12,14 +13,25 @@ BCD = [63, 6, 91, 79, 102, 109, 125, 7, 127, 111]
 # MOSI.direction=digitalio.Direction.OUTPUT
 # CLK.direction = digitalio.Direction.OUTPUT
 
+
+def writeAscii(text):
+    out =[]
+    for char in text:
+        value = SevenSegmentASCII[ord(char)-32]
+        spi.write([value])
+        spi.write([value])
+        sleep(1)
+    return out
+
 spi=board.SPI()
-spi.try_lock()
-spi.configure(baudrate=10)
-spi.unlock()
-while True:
-    spi.write([0xff])
-    sleep(0.5)
-# spi = board.SPI()
+writeAscii("Hello World"
+)
+# while True:
+#     for digit in BCD:
+#         spi.write([digit])
+#         spi.write([digit])
+#         sleep(1)
+    # spi = board.SPI()
 # cs=digitalio.DigitalInOut(board.D6)
 # while True:
 #     for i in range(10):

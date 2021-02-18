@@ -1,6 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
-# Copyright (c) 2019, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,70 +21,67 @@
 # DEALINGS IN THE SOFTWARE.
 #
 
-from database import updateDatabase
-from sevenSeg import updateDisplay
+import database
+import sevenSeg
 
 import jetson.inference
 import jetson.utils
-import asyncio
-import database.py
+from time import strftime
+import argparse
 import sys
-import time
 
-import
-
-
-async def countVehicles():
-    vehiclecount = 0  # Allocate memory for Vehicle Count
-
-    network = "ssd-mobilenet-v2"  # Use pre-trained NN for vehicle detection
-    threshold = 0.5  # change this to affect triggering threshold
-    cam = "/dev/video0"  # might need to change this to CSI, depending
-    cWidth = 640
-    cHeight = 480  # 640x480 may need to adjust for compromise b/w speed and clarity
-
-    # load the object detection network
-    net = jetson.inference.detectNet(network, sys.argv, threshold)
-
-    font = jetson.utils.cudaFont()
-    # create the camera
-    camera = jetson.utils.gstCamera(cWidth, cHeight, cam)
-
-    # process frames until user exits
-    t = time.time()
-    while True:
-        # capture the image
-        img, width, height = camera.CaptureRGBA(zeroCopy=1)
-
-        # detect objects in the image (with overlay)
-        detections = net.Detect(img, width, height, False)
-
-        ####
-        #  Looks like we should have a if statement: If detections = vehicle, update database counter
-        #                                               else: ignore detections
-        # -Josh
-
-        ####
-        # Probably need vehicle fronts/ backs to inc/decrement :cry:
-        for detection in detections:
-            if detection == 'vehicle':
-                vehicleCount = updateDatabase(u'Shrank')
-                updateDisplay(vehicleCount)
-                print('Vehicle Detected')
-
-        # net.PrintProfilerTimes()
-
-# Nano's Capability
-# 2 Uart
-# 2 I2C
-# 2 SPI
-
-# Nano Comms
-# rx info from MM about RFID cars
-# tx info to MM about Photo cars, to update 7-seg
+# initialize camera and NN settings
+videoIn = "csi://0"
+date = strftime("%m%d-%H:%M:%S")
+videoOut = f"./video/video-{date}.mp4"
+neuralnet = "ssd-mobilenet-v2"
+overlay = "box,labels,conf"
+threshold = 0.5
 
 
-# Main Module
-# 1 SPI 7-segment
-# 1 UART?? RFID comms
-#
+# init database
+db = database.Database()
+GARAGE = "Admin"
+count = db.getCurrentCount()
+
+# init 7seg
+seg = sevenSeg.sevenseg()
+seg.updateDisplay(count)
+
+# load the object detection network
+net = jetson.inference.detectNet(neuralnet, threshold=threshold)
+
+# create video sources & outputs
+input = jetson.utils.videoSource(videoIn)
+output = jetson.utils.videoOutput(videoOut)
+
+# process frames until the user exits
+while True:
+	# capture the next image
+	img = input.Capture()
+
+	# detect objects in the image (with overlay)
+	detections = net.Detect(img, overlay=overlay)
+
+	# print the detections
+	print("detected {:d} objects in image".format(len(detections)))
+
+	for detection in detections:
+		if detection == 'car':
+            count = db.updateDatabase(GARAGE)
+            seg.updateDisplay(count)
+            print(f'{detection} detected, count is now {count}')
+	# render the image
+	output.Render(img)
+
+	# update the title bar
+	output.SetStatus("{:s} | Network {:.0f} FPS".format(neuralnet, net.GetNetworkFPS()))
+
+	# print out performance info
+	net.PrintProfilerTimes()
+
+	# exit on input/output EOS
+	if not input.IsStreaming() or not output.IsStreaming():
+		break
+
+

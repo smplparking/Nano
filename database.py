@@ -1,9 +1,14 @@
-from google.cloud import firestore_v1 as firestore
+from google.cloud import firestore
 from google.auth import credentials
-from google.cloud.firestore_v1 import Increment
+from google.cloud.firestore import Increment
 import firebase_admin
 
-default_app = firebase_admin.initialize_app()
+# cred = credentials.Certificate("path/to/serviceAccountKey.json")
+# firebase_admin.initialize_app(cred)
+
+class Database:
+  def __init__():
+    default_app = firebase_admin.initialize_app()
 
 
 # Network comms w/ DB
@@ -32,15 +37,17 @@ default_app = firebase_admin.initialize_app()
 
 #garage = 'schrank','church','admin',etc
 
-def updateDatabase(garage):
-    db = firestore.Client()
+  def updateDatabase(garage):
+      db = firestore.Client()
+      collection = db.collection(u'Garages').document(garage)
+      collection.set({
+          u'currentCars': Increment(1)
+      }, merge=True)
+      count = collection.get().to_dict()['currentCars']
+      print(count)
+      return count
+    
+  def getCurrentCount(garage):
+    db=firestore.Client()
     collection = db.collection(u'Garages').document(garage)
-    collection.set({
-        u'currentCars': Increment(1)
-    }, merge=True)
-    count = collection.get().to_dict()['currentCars']
-    print(count)
-    return count
-
-
-updateDatabase('Admin')
+    return collection.get().to_dict()['currentCars']

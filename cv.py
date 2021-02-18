@@ -21,6 +21,8 @@
 # DEALINGS IN THE SOFTWARE.
 #
 
+VEHICLES={3:"car", 8: "truck", }
+
 import database
 import sevenSeg
 
@@ -32,6 +34,7 @@ import sys
 
 # initialize camera and NN settings
 videoIn = "csi://0"
+videoInArgs=["--input-flip=rotate-180"]
 date = strftime("%m%d-%H%M%S")
 videoOut = f"./video/video-{date}.mp4"
 neuralnet = "ssd-mobilenet-v2"
@@ -42,17 +45,18 @@ threshold = 0.5
 # init database
 db = database.Database()
 GARAGE = "Admin"
-count = db.getCurrentCount()
+count = db.getCurrentCount(GARAGE)
 
 # init 7seg
 seg = sevenSeg.sevenseg()
 seg.updateDisplay(count)
+print(f'currently {count} cars in garage, updating display')
 
 # load the object detection network
 net = jetson.inference.detectNet(neuralnet, threshold=threshold)
 
 # create video sources & outputs
-input = jetson.utils.videoSource(videoIn)
+input = jetson.utils.videoSource(videoIn, videoInArgs)
 output = jetson.utils.videoOutput(videoOut)
 
 # process frames until the user exits
@@ -67,10 +71,11 @@ while True:
     print("detected {:d} objects in image".format(len(detections)))
 
     for detection in detections:
-        if detection == 'car':
+        print(detection)
+        if detection.ClassID in VEHICLES.keys():
             count = db.updateDatabase(GARAGE)
             seg.updateDisplay(count)
-            print(f'{detection} detected, count is now {count}')
+            print(f'{VEHICLES[detection.ClassID]} detected, count is now {count}')
     # render the image
     output.Render(img)
 

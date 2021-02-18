@@ -27,13 +27,13 @@ class sevenseg:
         self.spi.write([0x0])
 
 
-    async def updateDisplay(self,count):
+    def updateDisplay(self,count):
         # SPI Communication w/ 7segs
 
-        to_send = [count % 10, (count//10) % 10]  # LSD, MSD
+        to_send = [(count//10) % 10,count % 10, ]  # LSD, MSD
         to_send = [BCD[x]
                     for x in to_send]  # use table to convert to binary
         if count > 99:
             to_send = [x + 128 for x in to_send]  # if > 99, add '+'
-        await self.spi.write(to_send)  # send spi comms
-        await self.spi.write(to_send)  # writing twice fixes segment issues
+        self.spi.write(to_send)  # send spi comms
+        self.spi.write(to_send)  # writing twice fixes segment issues

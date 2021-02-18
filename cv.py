@@ -32,7 +32,7 @@ import sys
 
 # initialize camera and NN settings
 videoIn = "csi://0"
-date = strftime("%m%d-%H:%M:%S")
+date = strftime("%m%d-%H%M%S")
 videoOut = f"./video/video-{date}.mp4"
 neuralnet = "ssd-mobilenet-v2"
 overlay = "box,labels,conf"

@@ -6,9 +6,11 @@ import firebase_admin
 # cred = credentials.Certificate("path/to/serviceAccountKey.json")
 # firebase_admin.initialize_app(cred)
 
+
 class Database:
-  def __init__():
-    default_app = firebase_admin.initialize_app()
+    def __init__(self):
+        default_app = firebase_admin.initialize_app()
+        self.db = firestore.Client()
 
 
 # Network comms w/ DB
@@ -22,11 +24,11 @@ class Database:
 # # Add a new document
 # db = firestore.Client()
 #doc_ref = db.collection(u'users').document(u'alovelace')
-#doc_ref.set({
-  #  u'first': u'Ada',
-  #  u'last': u'Lovelace',
-  #  u'born': 1815
-#})
+# doc_ref.set({
+    #  u'first': u'Ada',
+    #  u'last': u'Lovelace',
+    #  u'born': 1815
+# })
 
 # # Then query for documents
 # users_ref = db.collection(u'users')
@@ -37,17 +39,16 @@ class Database:
 
 #garage = 'schrank','church','admin',etc
 
-  def updateDatabase(garage):
-      db = firestore.Client()
-      collection = db.collection(u'Garages').document(garage)
-      collection.set({
-          u'currentCars': Increment(1)
-      }, merge=True)
-      count = collection.get().to_dict()['currentCars']
-      print(count)
-      return count
-    
-  def getCurrentCount(garage):
-    db=firestore.Client()
-    collection = db.collection(u'Garages').document(garage)
-    return collection.get().to_dict()['currentCars']
+
+    def updateDatabase(self, garage) -> int:
+        collection = self.db.collection(u'Garages').document(garage)
+        collection.set({
+            u'currentCars': Increment(1)
+        }, merge=True)
+        count = collection.get().to_dict()['currentCars']
+        print(count)
+        return count
+
+    def getCurrentCount(self, garage) -> int:
+        collection = self.db.collection(u'Garages').document(garage)
+        return collection.get().to_dict()['currentCars']

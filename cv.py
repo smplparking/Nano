@@ -57,31 +57,30 @@ output = jetson.utils.videoOutput(videoOut)
 
 # process frames until the user exits
 while True:
-	# capture the next image
-	img = input.Capture()
+    # capture the next image
+    img = input.Capture()
 
-	# detect objects in the image (with overlay)
-	detections = net.Detect(img, overlay=overlay)
+    # detect objects in the image (with overlay)
+    detections = net.Detect(img, overlay=overlay)
 
-	# print the detections
-	print("detected {:d} objects in image".format(len(detections)))
+    # print the detections
+    print("detected {:d} objects in image".format(len(detections)))
 
-	for detection in detections:
-		if detection == 'car':
+    for detection in detections:
+        if detection == 'car':
             count = db.updateDatabase(GARAGE)
             seg.updateDisplay(count)
             print(f'{detection} detected, count is now {count}')
-	# render the image
-	output.Render(img)
+    # render the image
+    output.Render(img)
 
-	# update the title bar
-	output.SetStatus("{:s} | Network {:.0f} FPS".format(neuralnet, net.GetNetworkFPS()))
+    # update the title bar
+    output.SetStatus("{:s} | Network {:.0f} FPS".format(
+        neuralnet, net.GetNetworkFPS()))
 
-	# print out performance info
-	net.PrintProfilerTimes()
+    # print out performance info
+    net.PrintProfilerTimes()
 
-	# exit on input/output EOS
-	if not input.IsStreaming() or not output.IsStreaming():
-		break
-
-
+    # exit on input/output EOS
+    if not input.IsStreaming() or not output.IsStreaming():
+        break

@@ -89,7 +89,7 @@ while True:
     
     if logging is False:
         with open(logPath, 'w') as log:
-                log.write("Year, Month, Day, Time, Direction\n")
+                log.write("Year, Month, Day, Time, Direction, Avail. Spaces\n")
         logging = True
 
     # resize image (NOTE: necessary?)
@@ -158,15 +158,11 @@ while True:
                 elif direction < 0:
                     vehicle.direction = "EXIT"
                     count = db.DecDatabase(GARAGE)
+                with open(logPath, 'a') as log:
+                    log.write(f"{strftime('%Y, %b, %d, %I:%M:%S %p')}, {vehicle.direction}, {count}\n")
                 vehicle.tracked = True
             seg.updateDisplay(count)
         trackedVehicles[pointID] = vehicle
-
-        if not vehicle.logged:
-            with open(logPath, 'a') as log:
-                log.write(
-                    f"{strftime('%Y, %b, %d, %I:%M:%S %p')}, {vehicle.direction}\n")
-            vehicle.logged = True
 
     output.Render(img)
 

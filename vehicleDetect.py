@@ -16,7 +16,5 @@ class Vehicle:
         # used to indidicate if the object's speed has been logged or
         # not
         self.tracked = False
-        self.logged = False
-
         # initialize the direction of the object
         self.direction = None

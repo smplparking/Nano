@@ -30,7 +30,7 @@ class Vehicle:
         self.direction = None
 
     def calculate_speed(self, estimatedSpeeds):
-		""" probably don't need this shit, fuck speed tracking, ODOYLE RULES"""
+        """ probably don't need this shit, fuck speed tracking, ODOYLE RULES"""
         # calculate the speed in KMPH and MPH
         self.speedKMPH = np.average(estimatedSpeeds)
         MILES_PER_ONE_KILOMETER = 0.621371

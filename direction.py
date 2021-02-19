@@ -114,15 +114,9 @@ while True:
         centerPoint = detection.Center
         if detection.ClassID not in VEHICLES.keys():
             continue
-        # NOTE: no idea wtf they're doing here, lets find an easier
-        # way to do this with our tools at hand
-        # tracker = dlib.correlation_tracker()
-        # rect = dlib.rectangle(startX, startY, endX, endY)
-        # tracker.start_track(rgb, rect)
 
-        # add the tracker to our list of trackers so we can
-        # utilize it during skip frames
-        # trackers.append(tracker)
+        # add detected vehicle to trackers
+        trackers.append(detection)
         # NOTE: left here for the night... gotta figure out what exactly
         # they're adding to the trackers list, our way is easier since we
         # already have center

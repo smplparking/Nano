@@ -29,19 +29,19 @@ class pointTracker:
         del self.points[pointID]
         del self.disappeared[pointID]
 
-    def update(self, rectangles):
+    def update(self, detections):
         """Update centralPoints with new locations
         - if point is gone, increment disappeared frame count
 
         Args:
-            rectangles (List): list of input bounding box rectangles
+            detections (List(Detection)): list of input bounding box rectangles
 
         Returns:
             points (OrderedDict): set of trackable points
         """
 
         # if no bounding boxes, add disappeared frame count to each point
-        if len(rectangles) == 0:
+        if len(detections) == 0:
 
             for pointID in list(self.disappeared.keys()):
                 self.disappeared[pointID] += 1
@@ -51,21 +51,18 @@ class pointTracker:
             return self.points
 
         # Create an array of Central Points all set to 0
-        newPoints = np.zeros((len(rectangles), 2), dtype="int")
+        newPoints = np.zeros((len(detections), 2), dtype="int")
 
         # Creating Central Points from Bounding Boxes
-        for(i, (minX, minY, maxX, maxY)) in enumerate(rectangles):
-            # creating bounding box coordinates to derive central Point
-            midX = int((minX + maxX) / 2.0)
-            midY = int((minY + maxY) / 2.0)
-            newPoints[i] = (midX, midY)
+        for i, detection in enumerate(detections):
+            newPoints[i] = detection.Center
 
         # If no points currently tracked, add new tracked points
         if len(self.points) == 0:
             for point in newPoints:
                 self.register(point)
 
-        # Currently tracking points, need to match input central points to existing object central Points
+        # Currently tracking points, need to match new Points to existing Points
         else:
             # Grab object IDs and Corresponding Central Points
             pointIDs = list(self.points.keys())
@@ -76,7 +73,7 @@ class pointTracker:
 
             # To match, find smallest value in each row, sort the row indexes based on their minimum values
             # so that the row with the smallest value as at the *front* of the index list
-            rows = pointDistance.min(axis=1).arsort()
+            rows = pointDistance.min(axis=1).argsort()
 
             # Same Process but with Columns and sort with previous row index list
             cols = pointDistance.argmin(axis=1)[rows]

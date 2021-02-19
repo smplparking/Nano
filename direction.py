@@ -8,9 +8,16 @@ from commentjson import load
 from pointTracker import pointTracker
 from vehicleDetect import Vehicle
 from sevenSeg import sevenseg
+from database import Database
+
+import numpy as np
 
 import jetson.inference
 import jetson.utils
+
+# set up Database
+db = Database()
+GARAGE = "Schrank"
 
 # Tracked vehicles and corresponding classID
 VEHICLES = {3: "car", 8: "truck", }
@@ -41,26 +48,15 @@ net = jetson.inference.detectNet(neuralnet, threshold=threshold)
 input = jetson.utils.videoSource(videoIn, videoInArgs)
 output = jetson.utils.videoOutput(videoOut)
 
-# set up height and width for bounding box
-H = None
-W = None
-
 # set up point tracking
 pt = pointTracker(
     maxDisappeared=config["max_dissapear"], maxDistance=config["max_distance"])
 trackers = []
 trackedVehicles = {}
 
-
-# total frames processed ? NOTE: MAYBE UNNECCESARY
-totalFrames = 0
-
-
 logFile = None
 
-# fps throughput estimator
-fps = FPS().start()
-
+tracked_frames = 0
 # process frames until the user exits
 while True:
 
@@ -72,9 +68,6 @@ while True:
     # capture the next image
     img = input.Capture()
 
-    # ts=datetime.now()
-    newDate = strftime("%m-%d-%y")
-
     # if image not captured, something went wrong
     if img is None:
         break
@@ -85,50 +78,83 @@ while True:
         with open(logPath, 'a') as log:
             log.write("Year, Month, Day, Time, Direction")
 
-    # resize image
-    img = imutils.resize(img, width=config["frame_width"])
-
-    #rgb = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
-    # NOTE: IDK wtf this does, but CV2 doesn't work... find an alt in inference
-
-    # set image dimensions
-    if W is None or H is None:
-        (H, W) = img.shape[:2]
-        # foot per pixel set in config file/ divided by height (we go up/down)
-        footPerPixel = conf["distance"]/H
+    # resize image (NOTE: necessary?)
+    #img = imutils.resize(img, width=config["frame_width"])
 
     # initialize list of bounding boxes returned by detector
     boxes = []
 
-    # NOTE: IGNORING THE TRACKER AND JUST USING CV, MIGHT NEED TO REVISIT
-    # if totalFrames % config["tracking_frames"] == 0
+    if tracked_frames % config["tracking_frames"] == 0:
+        tracked_frames = 1
+        # initialize trackers
+        trackers = []
 
-    # initialize trackers
-    trackers = []
+        # detect objects in the image (with overlay)
+        detections = net.Detect(img, overlay=overlay)
 
-    # detect objects in the image (with overlay)
-    detections = net.Detect(img, overlay=overlay)
+        for detection in detections:
+            confidence = detection.Confidence
+            # centerPoint = detection.Center
 
-    for detection in detections:
-        confidence = detection.Confidence
-        centerPoint = detection.Center
-        if detection.ClassID not in VEHICLES.keys():
-            continue
+            if confidence < config["confidence"]:
+                continue
 
-        # add detected vehicle to trackers
-        trackers.append(detection)
-        # NOTE: left here for the night... gotta figure out what exactly
-        # they're adding to the trackers list, our way is easier since we
-        # already have center
-        # do this if the vehicle hasn't been counted
-        # count = db.updateDatabase(GARAGE)
-        # if TEST:
-        #     miniseg.write(count)
-        # else:
-        #     seg.updateDisplay(count)
-        # print(
-        #     f'{VEHICLES[detection.ClassID]} detected, count is now {count}')
-    # render the image
+            if detection.ClassID not in VEHICLES.keys():
+                continue
+
+            tracker = dlib.correlation_tracker()
+            minX, minY, maxX, maxY = detection.Left, detection.Top, detection.Right, detection.Bottom
+            bounds = dlib.rectangle(minX, minY, maxX, maxY)
+            tracker.start_track(img, bounds)
+            # add detected vehicle to trackers
+            trackers.append(tracker)
+
+    # NOTE: this uses trackers instead of detectors to get higher frame throughput
+    else:
+        tracked_frames += 1
+        for tracker in trackers:
+            tracker.update(img)
+            pos = tracker.get_position()
+            # unpack the position object
+            minX = int(pos.left())
+            minY = int(pos.top())
+            maxX = int(pos.right())
+            maxY = int(pos.bottom())
+
+            # add the bounding box coordinates to the rectangles list
+            boxes.append((minX, minY, maxX, maxY))
+
+            # render the image
+
+    # use point tracker to associate old and new points
+    points = pt.update(boxes)
+
+    for (pointID, centerPoint) in points.items():
+        vehicle = trackedVehicles(pointID, centerPoint)
+
+        if vehicle is None:
+            vehicle = Vehicle(pointID, centerPoint)
+
+        elif not vehicle.tracked:
+            if vehicle.direction is None:
+                y = [p[0] for p in vehicle.points]
+                direction = centerPoint[0] - np.mean(y)
+                # NOTE: Make sure direction is correct, otherwise flip gt to lt
+                if direction > 0:
+                    vehicle.direction = "ENTER"
+                    db.IncDatabase(GARAGE)
+                elif direction < 0:
+                    vehicle.direction = "EXIT"
+                    db.DecDatabase(GARAGE)
+                vehicle.tracked = True
+        trackedVehicles[pointID] = vehicle
+
+        if not vehicle.logged:
+            with open(logPath, 'a') as log:
+                log.write(
+                    f"{strftime('%Y, %b, %d, %I:%M:%S %p')}, {vehicle.direction} ")
+            vehicle.logged = True
+
     output.Render(img)
 
     # update the title bar

@@ -39,8 +39,16 @@ class Database:
 
 #garage = 'schrank','church','admin',etc
 
+    def DecDatabase(self, garage) -> int:
+        collection = self.db.collection(u'Garages').document(garage)
+        collection.set({
+            u'currentCars': Increment(-1)
+        }, merge=True)
+        count = collection.get().to_dict()['currentCars']
+        print(count)
+        return count
 
-    def updateDatabase(self, garage) -> int:
+    def IncDatabase(self, garage) -> int:
         collection = self.db.collection(u'Garages').document(garage)
         collection.set({
             u'currentCars': Increment(1)

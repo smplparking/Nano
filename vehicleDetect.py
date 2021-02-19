@@ -1,7 +1,3 @@
-# import the necessary packages
-import numpy as np
-
-
 class Vehicle:
     def __init__(self, pointID, centralPoint):
         # store the object ID, then initialize a list of centroids

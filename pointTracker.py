@@ -29,19 +29,19 @@ class pointTracker:
         del self.points[pointID]
         del self.disappeared[pointID]
 
-    def update(self, detections):
+    def update(self, boxes):
         """Update centralPoints with new locations
         - if point is gone, increment disappeared frame count
 
         Args:
-            detections (List(Detection)): list of input bounding box rectangles
+            boxes (List(X,Y,X,Y)): list of input bounding boxes
 
         Returns:
             points (OrderedDict): set of trackable points
         """
 
         # if no bounding boxes, add disappeared frame count to each point
-        if len(detections) == 0:
+        if len(boxes) == 0:
 
             for pointID in list(self.disappeared.keys()):
                 self.disappeared[pointID] += 1
@@ -51,11 +51,14 @@ class pointTracker:
             return self.points
 
         # Create an array of Central Points all set to 0
-        newPoints = np.zeros((len(detections), 2), dtype="int")
+        newPoints = np.zeros((len(boxes), 2), dtype="int")
 
-        # Creating Central Points from Bounding Boxes
-        for i, detection in enumerate(detections):
-            newPoints[i] = detection.Center
+        # loop over the bounding box rectangles
+        for (i, (minX, minY, maxX, maxY)) in enumerate(boxes):
+            # use the bounding box coordinates to derive the centroid
+            cX = int((minX + maxX) / 2.0)
+            cY = int((minY + maxY) / 2.0)
+            newPoints[i] = (cX, cY)
 
         # If no points currently tracked, add new tracked points
         if len(self.points) == 0:

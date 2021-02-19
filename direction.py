@@ -33,7 +33,7 @@ seg.clear()
 VEHICLES = {3: "car", 8: "truck", }
 
 # Output to MP4?
-RECORD = False
+RECORD = True
 
 # read configuration file
 with open("config.json") as conf:
@@ -67,6 +67,7 @@ trackedVehicles = {}
 
 # set up logging
 logPath = f"./logs/{date}.log"
+logging = False
 
 tracked_frames = 0
 seg.updateDisplay(count)
@@ -85,10 +86,11 @@ while True:
     # if image not captured, something went wrong
     if img is None:
         break
-
-    with open(logPath, 'w') as log:
-        if log is None:
-            log.write("Year, Month, Day, Time, Direction")
+    
+    if logging is False:
+        with open(logPath, 'w') as log:
+                log.write("Year, Month, Day, Time, Direction")
+        logging = True
 
     # resize image (NOTE: necessary?)
     #img = imutils.resize(img, width=config["frame_width"])
@@ -141,8 +143,7 @@ while True:
     # use point tracker to associate old and new points
     points = pt.update(boxes)
     for (pointID, centerPoint) in points.items():
-        vehicle = trackedVehicles.get(pointID, centerPoint)
-        print(vehicle)
+        vehicle = trackedVehicles.get(pointID, None)
 
         if vehicle is None:
             vehicle = Vehicle(pointID, centerPoint)

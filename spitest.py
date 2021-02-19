@@ -4,8 +4,9 @@ import busio
 import digitalio
 from time import sleep
 from constants import SevenSegmentASCII
-BCD = [63, 6, 91, 79, 102, 109, 125, 7, 127, 111]
 
+
+BCD = [63, 6, 91, 79, 102, 109, 125, 7, 127, 111]
 
 # MOSI = digitalio.DigitalInOut(board.MOSI)
 # CLK=digitalio.DigitalInOut(board.D6)
@@ -24,8 +25,7 @@ def writeAscii(text):
     return out
 
 spi=board.SPI()
-writeAscii("Hello World"
-)
+writeAscii("Hello World")
 # while True:
 #     for digit in BCD:
 #         spi.write([digit])

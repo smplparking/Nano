@@ -51,29 +51,28 @@ class pointTracker:
             return self.points
 
         # Create an array of Central Points all set to 0
-        inputCentralPoint = np.zeros((len(rectangles), 2), dtype="int")
+        newPoints = np.zeros((len(rectangles), 2), dtype="int")
 
         # Creating Central Points from Bounding Boxes
         for(i, (minX, minY, maxX, maxY)) in enumerate(rectangles):
             # creating bounding box coordinates to derive central Point
             midX = int((minX + maxX) / 2.0)
             midY = int((minY + maxY) / 2.0)
-            inputCentralPoint[i] = (midX, midY)
+            newPoints[i] = (midX, midY)
 
         # If no points currently tracked, add new tracked points
         if len(self.points) == 0:
-            for i in range(0, len(inputCentralPoint)):
-                self.register(centralPoint[i])
+            for point in newPoints:
+                self.register(point)
 
         # Currently tracking points, need to match input central points to existing object central Points
         else:
             # Grab object IDs and Corresponding Central Points
             pointIDs = list(self.points.keys())
-            objectCentralPoints = list(self.points.values())
+            existingPoints = list(self.points.values())
 
-            # Computing the distance between each pair of object central Points and input central Points
-            pointDistance = dist.cdist(
-                np.array(objectCentralPoints), inputCentralPoint)
+            # Computing the distance between each pair of existing Points and new Points
+            pointDistance = dist.cdist(np.array(existingPoints), newPoints)
 
             # To match, find smallest value in each row, sort the row indexes based on their minimum values
             # so that the row with the smallest value as at the *front* of the index list
@@ -101,7 +100,7 @@ class pointTracker:
                 # Grab pointID for the current row, set its new central point, and reset
                 # the disappeared counter
                 pointID = pointIDs[row]
-                self.points[pointID] = inputCentralPoint[col]
+                self.points[pointID] = newPoints[col]
                 self.disappeared[pointID] = 0
 
                 # update each row and column into our used rows/cols list
@@ -130,7 +129,7 @@ class pointTracker:
             # each new input central point as a trackable object
             else:
                 for col in unusedcols:
-                    self.register(inputCentralPoint[col])
+                    self.register(newPoints[col])
 
         # return the set of trackable points
         return self.points

@@ -43,8 +43,9 @@ class sevenseg:
         self.spi.try_lock()
         self.spi.configure(baudrate=baudrate)
         self.spi.unlock()
+        self.clear()
 
-    def reset(self):
+    def clear(self):
         """'reset' display by writing 0s
         """
         self.spi.write([0x0])

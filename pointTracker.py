@@ -1,0 +1,136 @@
+from collections import OrderedDict
+from scipy.spatial import distance as dist
+import numpy as np
+
+
+class pointTracker:
+    def __init__(self, maxDisappeared, maxDistance):
+        # Initialize
+        self.nextPointID = 0
+        self.points = OrderedDict()
+        self.disappeared = OrderedDict()
+        # num frames to signify object gone
+        self.maxDisappeared = maxDisappeared
+        # distance between points to signify different objects
+        self.maxDistance = maxDistance
+
+    def register(self, centralPoint):
+        """
+        Registering an object, use next object ID to store central point
+        """
+        self.points[self.nextPointID] = centralPoint
+        self.disappeared[self.nextPointID] = 0
+        self.nextPointID += 1
+
+    def deregister(self, pointID):
+        """
+        # Deregistering an object, delete object from both dictionaries
+        """
+        del self.points[pointID]
+        del self.disappeared[pointID]
+
+    def update(self, rectangles):
+        """Update centralPoints with new locations
+        - if point is gone, increment disappeared frame count
+
+        Args:
+            rectangles (List): list of input bounding box rectangles
+
+        Returns:
+            points (OrderedDict): set of trackable points
+        """
+
+        # if no bounding boxes, add disappeared frame count to each point
+        if len(rectangles) == 0:
+
+            for pointID in list(self.disappeared.keys()):
+                self.disappeared[pointID] += 1
+                # if object has been gone for too many frames, stop tracking
+                if self.disappeared[pointID] > self.maxDisappeared:
+                    self.deregister(pointID)
+            return self.points
+
+        # Create an array of Central Points all set to 0
+        inputCentralPoint = np.zeros((len(rectangles), 2), dtype="int")
+
+        # Creating Central Points from Bounding Boxes
+        for(i, (minX, minY, maxX, maxY)) in enumerate(rectangles):
+            # creating bounding box coordinates to derive central Point
+            midX = int((minX + maxX) / 2.0)
+            midY = int((minY + maxY) / 2.0)
+            inputCentralPoint[i] = (midX, midY)
+
+        # If no points currently tracked, add new tracked points
+        if len(self.points) == 0:
+            for i in range(0, len(inputCentralPoint)):
+                self.register(centralPoint[i])
+
+        # Currently tracking points, need to match input central points to existing object central Points
+        else:
+            # Grab object IDs and Corresponding Central Points
+            pointIDs = list(self.points.keys())
+            objectCentralPoints = list(self.points.values())
+
+            # Computing the distance between each pair of object central Points and input central Points
+            pointDistance = dist.cdist(
+                np.array(objectCentralPoints), inputCentralPoint)
+
+            # To match, find smallest value in each row, sort the row indexes based on their minimum values
+            # so that the row with the smallest value as at the *front* of the index list
+            rows = pointDistance.min(axis=1).arsort()
+
+            # Same Process but with Columns and sort with previous row index list
+            cols = pointDistance.argmin(axis=1)[rows]
+
+            # Keep track of used Rows/Columns for updating/registering/deregistering
+            usedRows = set()
+            usedCols = set()
+
+            # Put mother truckers into tuples
+            for (row, col) in zip(rows, cols):
+                # Ignore already examined row or column
+                if row in usedRows or col in usedCols:
+                    continue
+
+                # If distance between Central Points is greater than the max distance,
+                # do not associate the two central points to the same object
+
+                if pointDistance[row, col] > self.maxDistance:
+                    continue
+
+                # Grab pointID for the current row, set its new central point, and reset
+                # the disappeared counter
+                pointID = pointIDs[row]
+                self.points[pointID] = inputCentralPoint[col]
+                self.disappeared[pointID] = 0
+
+                # update each row and column into our used rows/cols list
+                usedRows.add(row)
+                usedCols.add(col)
+
+            # Compute row/col index we have **NOT** examined yet
+            unusedRows = set(
+                range(0, pointDistance.shape[0])).difference(usedRows)
+            unusedcols = set(
+                range(0, pointDistance.shape[1])).difference(usedCols)
+
+            # if total Central points are >= number of new central points,
+            # we need to check and see if some of these objects have possibly disappeared
+            if pointDistance.shape[0] >= pointDistance.shape[1]:
+                for row in unusedRows:
+                    # grab pointID for row index and increment the disappeared counter
+                    pointID = pointIDs[row]
+                    self.disappeared[pointID] += 1
+
+                    # if objects disappeared frames > max disappeared, we deregister
+                    if self.disappeared[pointID] > self.maxDisappeared:
+                        self.deregister(pointID)
+
+            # if new central points >  existing central points, register
+            # each new input central point as a trackable object
+            else:
+                for col in unusedcols:
+                    self.register(inputCentralPoint[col])
+
+        # return the set of trackable points
+        return self.points

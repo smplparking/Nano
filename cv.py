@@ -20,40 +20,37 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 #
-VEHICLES={3:"car", 8: "truck", }
-
-import database
-import sevenSeg
-
-import jetson.inference
-import jetson.utils
-from time import strftime
-import argparse
-import sys
-
-#Record to MP4
-RECORD=False
-
-
-#Testing with small 7seg
 from max7219 import max
+import sys
+from time import strftime
+import jetson.utils
+import jetson.inference
+import sevenSeg
+import database
+VEHICLES = {3: "car", 8: "truck", }
+
+
+# Record to MP4
+RECORD = False
+
+
+# Testing with small 7seg
 TEST = True
 if TEST:
-    miniseg=max()
-    
+    miniseg = max()
+
 
 # initialize camera and NN settings
 videoIn = "csi://0"
-videoInArgs=["--input-flip=rotate-180"]
+videoInArgs = ["--input-flip=rotate-180"]
 date = strftime("%m%d-%H%M%S")
 if RECORD:
     videoOut = f"./video/video-{date}.mp4"
 else:
-    videoOut=""
+    videoOut = ""
 neuralnet = "ssd-mobilenet-v2"
 overlay = "box,labels,conf"
 threshold = 0.5
-
 
 
 # init database
@@ -83,7 +80,7 @@ while True:
         miniseg.write(count)
     else:
         seg.updateDisplay(count)
-    
+
     # capture the next image
     img = input.Capture()
 
@@ -101,7 +98,8 @@ while True:
                 miniseg.write(count)
             else:
                 seg.updateDisplay(count)
-            print(f'{VEHICLES[detection.ClassID]} detected, count is now {count}')
+            print(
+                f'{VEHICLES[detection.ClassID]} detected, count is now {count}')
     # render the image
     output.Render(img)
 

@@ -20,7 +20,6 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 #
-
 VEHICLES={3:"car", 8: "truck", }
 
 import database
@@ -32,24 +31,42 @@ from time import strftime
 import argparse
 import sys
 
+#Record to MP4
+RECORD=False
+
+
+#Testing with small 7seg
+from max7219 import max
+TEST = True
+if TEST:
+    miniseg=max()
+    
+
 # initialize camera and NN settings
 videoIn = "csi://0"
 videoInArgs=["--input-flip=rotate-180"]
 date = strftime("%m%d-%H%M%S")
-videoOut = f"./video/video-{date}.mp4"
+if RECORD:
+    videoOut = f"./video/video-{date}.mp4"
+else:
+    videoOut=""
 neuralnet = "ssd-mobilenet-v2"
 overlay = "box,labels,conf"
 threshold = 0.5
 
 
+
 # init database
 db = database.Database()
-GARAGE = "Admin"
+GARAGE = "Schrank"
 count = db.getCurrentCount(GARAGE)
 
 # init 7seg
 seg = sevenSeg.sevenseg()
-seg.updateDisplay(count)
+if TEST:
+    miniseg.write(count)
+else:
+    seg.updateDisplay(count)
 print(f'currently {count} cars in garage, updating display')
 
 # load the object detection network
@@ -61,6 +78,12 @@ output = jetson.utils.videoOutput(videoOut)
 
 # process frames until the user exits
 while True:
+
+    if TEST:
+        miniseg.write(count)
+    else:
+        seg.updateDisplay(count)
+    
     # capture the next image
     img = input.Capture()
 
@@ -74,7 +97,10 @@ while True:
         print(detection)
         if detection.ClassID in VEHICLES.keys():
             count = db.updateDatabase(GARAGE)
-            seg.updateDisplay(count)
+            if TEST:
+                miniseg.write(count)
+            else:
+                seg.updateDisplay(count)
             print(f'{VEHICLES[detection.ClassID]} detected, count is now {count}')
     # render the image
     output.Render(img)

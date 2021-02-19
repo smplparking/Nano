@@ -89,7 +89,7 @@ while True:
     
     if logging is False:
         with open(logPath, 'w') as log:
-                log.write("Year, Month, Day, Time, Direction")
+                log.write("Year, Month, Day, Time, Direction\n")
         logging = True
 
     # resize image (NOTE: necessary?)
@@ -165,7 +165,7 @@ while True:
         if not vehicle.logged:
             with open(logPath, 'a') as log:
                 log.write(
-                    f"{strftime('%Y, %b, %d, %I:%M:%S %p')}, {vehicle.direction} ")
+                    f"{strftime('%Y, %b, %d, %I:%M:%S %p')}, {vehicle.direction}\n")
             vehicle.logged = True
 
     output.Render(img)
@@ -175,7 +175,7 @@ while True:
         neuralnet, net.GetNetworkFPS()))
 
     # print out performance info
-    net.PrintProfilerTimes()
+    #net.PrintProfilerTimes()
 
     # exit on input/output EOS
     if not input.IsStreaming() or not output.IsStreaming():

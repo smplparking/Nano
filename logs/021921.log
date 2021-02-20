@@ -1,14 +1,1 @@
-Year, Month, Day, Time, Direction, Avail. Spaces
-2021, Feb, 19, 06:30:53 PM, EXIT, 83
-2021, Feb, 19, 06:30:56 PM, ENTER, 84
-2021, Feb, 19, 06:30:58 PM, ENTER, 85
-2021, Feb, 19, 06:30:58 PM, None, 85
-2021, Feb, 19, 06:31:01 PM, ENTER, 86
-2021, Feb, 19, 06:31:03 PM, EXIT, 85
-2021, Feb, 19, 06:31:04 PM, EXIT, 84
-2021, Feb, 19, 06:31:07 PM, ENTER, 85
-2021, Feb, 19, 06:31:09 PM, ENTER, 86
-2021, Feb, 19, 06:31:13 PM, ENTER, 87
-2021, Feb, 19, 06:31:16 PM, ENTER, 88
-2021, Feb, 19, 06:31:18 PM, ENTER, 89
-2021, Feb, 19, 06:31:20 PM, ENTER, 90
+Year, Month, Day,        Time, Direction, Avail. Spaces

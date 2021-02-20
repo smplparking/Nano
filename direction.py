@@ -89,7 +89,7 @@ while True:
     
     if logging is False:
         with open(logPath, 'w') as log:
-                log.write("Year, Month, Day, Time, Direction, Avail. Spaces\n")
+                log.write("Year, Month, Day,        Time, Direction, Avail. Spaces\n")
         logging = True
 
     # resize image (NOTE: necessary?)
@@ -153,13 +153,13 @@ while True:
                 direction = centerPoint[0] - np.mean(y)
                 # NOTE: Make sure direction is correct, otherwise flip gt to lt
                 if direction > 0:
-                    vehicle.direction = "ENTER"
+                    vehicle.direction = "EXIT"
                     count = db.IncDatabase(GARAGE)
                 elif direction < 0:
-                    vehicle.direction = "EXIT"
+                    vehicle.direction = "ENTER"
                     count = db.DecDatabase(GARAGE)
                 with open(logPath, 'a') as log:
-                    log.write(f"{strftime('%Y, %b, %d, %I:%M:%S %p')}, {vehicle.direction}, {count}\n")
+                    log.write(f"{strftime('%Y,   %b,  %d, %I:%M:%S %p')},      {vehicle.direction},     {count}\n")
                 vehicle.tracked = True
             seg.updateDisplay(count)
         trackedVehicles[pointID] = vehicle

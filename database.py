@@ -39,24 +39,23 @@ class Database:
 
 #garage = 'schrank','church','admin',etc
 
-    def DecDatabase(self, garage) -> int:
-        collection = self.db.collection(u'Garages').document(garage)
-        collection.set({
+
+    async def DecDatabase(self, garage) -> int:
+        collection = await self.db.collection(u'Garages').document(garage)
+        await collection.set({
             u'currentCars': Increment(-1)
         }, merge=True)
-        count = collection.get().to_dict()['currentCars']
-        print(count)
+        count = await collection.get().to_dict()['currentCars']
         return count
 
-    def IncDatabase(self, garage) -> int:
-        collection = self.db.collection(u'Garages').document(garage)
-        collection.set({
+    async def IncDatabase(self, garage) -> int:
+        collection = await self.db.collection(u'Garages').document(garage)
+        await collection.set({
             u'currentCars': Increment(1)
         }, merge=True)
-        count = collection.get().to_dict()['currentCars']
-        print(count)
+        count = await collection.get().to_dict()['currentCars']
         return count
 
-    def getCurrentCount(self, garage) -> int:
-        collection = self.db.collection(u'Garages').document(garage)
+    async def getCurrentCount(self, garage) -> int:
+        collection = await self.db.collection(u'Garages').document(garage)
         return collection.get().to_dict()['currentCars']

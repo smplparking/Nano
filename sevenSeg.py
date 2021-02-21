@@ -4,24 +4,6 @@ from time import sleep
 BCD = [63, 6, 91, 79, 102, 109, 125, 7, 127, 111]
 
 
-def us_delay(N):
-    """microsecond delay
-
-    Args:
-        N (int): sleep for N microseconds
-    """
-    sleep(N/1000000.0)
-
-
-def ms_delay(N):
-    """millisecond delay
-
-    Args:
-        N (int): sleep for N milliseconds
-    """
-    sleep(N/1000.0)
-
-
 class sevenseg:
     """ Class for controlling previous team's 7-Seg Display
     """
@@ -45,13 +27,13 @@ class sevenseg:
         self.spi.unlock()
         self.clear()
 
-    def clear(self):
+    async def clear(self):
         """'reset' display by writing 0s
         """
         self.spi.write([0x0])
         self.spi.write([0x0])
 
-    def updateDisplay(self, count):
+    async def updateDisplay(self, count):
         """update display with count 
         - up to two numbers shown
         - above 99 shows 99+

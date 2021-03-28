@@ -25,8 +25,8 @@ with open("config.json") as conf:
     config = load(conf)
 
 # initialize camera and NN settings
-videoIn = "csi://0"
-videoInArgs = ["--input-flip=rotate-180"]
+videoIn = "video/cars.mp4"
+videoInArgs = ["--input-codec=h264"]#,"--headless=true"]#["--input-flip=rotate-180"]
 date = strftime("%m%d%y")
 time = strftime("%H%M%S")
 if RECORD:
@@ -42,7 +42,7 @@ net = jetson.inference.detectNet(neuralnet, threshold=threshold)
 
 # create video sources & outputs
 input = jetson.utils.videoSource(videoIn, videoInArgs)
-output = jetson.utils.videoOutput(videoOut)
+output = jetson.utils.videoOutput(videoOut,"--headless=true")
 
 # set up point tracking
 pt = pointTracker(

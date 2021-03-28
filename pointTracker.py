@@ -124,6 +124,7 @@ class pointTracker:
                     # if objects disappeared frames > max disappeared, we deregister
                     if self.disappeared[pointID] > self.maxDisappeared:
                         self.deregister(pointID)
+                        self.log(pointID)
 
             # if new central points >  existing central points, register
             # each new input central point as a trackable object

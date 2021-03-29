@@ -1,10 +1,11 @@
 from collections import OrderedDict
 from scipy.spatial import distance as dist
 import numpy as np
+import database
 
 
 class pointTracker:
-    def __init__(self, maxDisappeared, maxDistance):
+    def __init__(self,  maxDisappeared=10, maxDistance=175):
         # Initialize
         self.nextPointID = 0
         self.points = OrderedDict()
@@ -124,8 +125,7 @@ class pointTracker:
                     # if objects disappeared frames > max disappeared, we deregister
                     if self.disappeared[pointID] > self.maxDisappeared:
                         self.deregister(pointID)
-                        self.log(pointID)
-
+                        
             # if new central points >  existing central points, register
             # each new input central point as a trackable object
             else:

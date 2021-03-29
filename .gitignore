@@ -1,7 +1,9 @@
 secrets.json
 serviceAccountKey.json
-./video
+video/*
+
 /3d/
 /MPLab
 /PartsRequests
 SDP Peer Evaluation Form 2021.pdf
+__pycache__/

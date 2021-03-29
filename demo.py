@@ -33,7 +33,7 @@ async def main():
         videoIn="csi://0"
         videoInArgs=["--input-flip=rotate-180"]
     else:
-        videoIn = "video/test-latest2.mp4"
+        videoIn = "video/test.mp4"
         videoInArgs =["--input-codec=h264"]# 
     date = strftime("%m%d%y")
     time = strftime("%H%M%S")

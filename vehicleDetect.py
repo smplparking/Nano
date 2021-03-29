@@ -13,5 +13,5 @@ class Vehicle:
         self.tracked = False
         # initialize the direction of the object
         self.direction = None
-    def __del__():
+    def __del__(self):
         print("im gone")

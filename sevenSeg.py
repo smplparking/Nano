@@ -60,17 +60,14 @@ class sevenseg:
             count (int): number to display
         """
         # SPI Communication w/ 7segs
-        showCount = 0
 
         if count > 99:
-            showCount = 99
-        else:
-            showCount = count
+            count = 99
+        
+        LSD = count % 10
+        MSD = (count//10) % 10
 
-        LSD = showCount % 10
-        MSD = (showCount//10) % 10
-
-        to_send = [LSD, MSD, ]  # LSD, MSD
+        to_send = [LSD, MSD]  # LSD, MSD
         to_send = [BCD[x]
                    for x in to_send]  # use table to convert to binary
         if count > 99:

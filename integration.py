@@ -5,6 +5,7 @@ from time import sleep
 from random import randint
 async def main():
     seg=sevenSeg.sevenseg()
+    seg.clear()
     db=database.Database("Schrank")
     count = await db.getCurrentCount()
     seg.updateDisplay(count)

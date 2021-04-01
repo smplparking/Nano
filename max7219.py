@@ -1,19 +1,14 @@
 from adafruit_max7219 import bcddigits
 import board
-import busio
-import bitbangio
 import digitalio
-from constants import SevenSegmentASCII
 from time import sleep
 class max:
     def __init__(self):
-        din = board.D10
-        clk = board.D11
-        cs = digitalio.DigitalInOut(board.D8)
+        cs = digitalio.DigitalInOut(board.D6)
 
         spi = board.SPI()
         self.display = bcddigits.BCDDigits(spi, cs, nDigits=8)
-        self.display.brightness(0)
+        self.display.brightness(15)
         self.clear
 
     def clear(self):
@@ -21,6 +16,15 @@ class max:
 
     def updateDisplay(self,num : int):
         self.clear()
-        self.display.show_str(0,"{:8}".format(num))
+        #self.display.show_str(0,"{:8}".format(num))
+        self.display.show_str(4,"{:1}".format(num))
         self.display.show()
 
+if __name__ =="__main__":
+    seg =max()
+    for i in range(10):
+        seg.clear()
+        seg.updateDisplay(i)
+        print(i)
+        input()
+        

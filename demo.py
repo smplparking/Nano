@@ -1,6 +1,7 @@
 from datetime import datetime
 from time import strftime
-
+import sevenSeg
+import database
 from commentjson import load
 from numpy.core.numeric import False_
 
@@ -16,6 +17,7 @@ from database import Database
 import asyncio
 
 async def main():
+    seg = sevenSeg.sevenseg()
     GARAGE="Schrank"
     db=Database(GARAGE)
     # Tracked vehicles and corresponding classID
@@ -65,6 +67,7 @@ async def main():
     tracked_frames = 0
 
     count = await db.getCurrentCount()
+    seg.updateDisplay(count)
     # process frames until the user exits
     while True:
 
@@ -144,8 +147,10 @@ async def main():
                     if direction > 0:
                         vehicle.direction = "EXIT"
                         count += 1
+                        db.IncDatabase()
                     elif direction < 0:
                         vehicle.direction = "ENTER"
+                        db.DecDatabase()
                         count -= 1
                     vehicle.tracked = True
             trackedVehicles[pointID] = vehicle
@@ -159,7 +164,7 @@ async def main():
         # exit on input/output EOS
         if not input.IsStreaming() or not output.IsStreaming():
             break
-
+        seg.updateDisplay(count)
 if __name__=="__main__":
     loop = asyncio.new_event_loop()
     loop.run_until_complete(main())

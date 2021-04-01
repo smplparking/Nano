@@ -5,31 +5,25 @@ BCD = [63, 6, 91, 79, 102, 109, 125, 7, 127, 111]
 
 
 class Bang:
-    def __init__(self, cs: digitalio.Pin, frequency=10000000, MOSI=None, CLK=None):
+    def __init__(self, cs= None, frequency=10000000, MOSI=None, CLK=None):
         self.freq = frequency
         self.period = 1/frequency
-        self.cs = digitalio.digitalInOut(cs)
-        if MOSI is None or type(MOSI) is not digitalio.Pin:
-            self.mosi = board.MOSI
-        else:
-            self.mosi = MOSI
-        if CLK is None or type(CLK) is not digitalio.Pin:
-            self.clk = board.SCLK
-        else:
-            self.clk = CLK
-        self.cs.direction = digitalio.Direction.OUTPUT
-        self.clk.direction = digitalio.Direction.OUTPUT
-        self.mosi.direction = digitalio.Direction.OUTPUT
+        self.cs = digitalio.DigitalInOut(board.CE0)
+        self.mosi=digitalio.DigitalInOut(board.MOSI)
+        self.clk = digitalio.DigitalInOut(board.D11)
+        self.cs.switch_to_output()
+        self.mosi.switch_to_output()
+        self.clk.switch_to_output()
 
     def write_MOSI(self, bit):
         '''writes bit to MOSI'''
-        self.mosi.value = bit == 1
+        self.mosi.value = bit
 
     def write_SCLK(self, bit):
-        self.clk.value = bit == 1
+        self.clk.value = bit
 
     def write_CS(self, bit):
-        self.cs.value = bit == 1
+        self.cs.value = bit 
 
     def tick(self):
         self.write_SCLK(0)
@@ -47,10 +41,7 @@ class Bang:
 
     def send(self, bit, debug=False):
         ''' send bit to MOSI, then clock lo/hi'''
-        if (bit == 1):
-            self.write_MOSI(1)
-        else:
-            self.write_MOSI(0)
+        self.write_MOSI(bit)
 
         self.tick()
 
@@ -76,8 +67,7 @@ class Bang:
             LARGE = True
 
         lsd = BCD[num % 10]
-        num /= 10
-        msd = BCD[num % 10]
+        msd = BCD[num//10 % 10]
         if LARGE:
             msd += 128
 
@@ -86,8 +76,20 @@ class Bang:
 
         self.output()
 
+    def sendOne(self,data):
+        
+        mask = 0x80
+        for i in range(8):
+            self.write_CS(0)
+            bit = (data & mask) >> 7
+            self.send(bit)
+            data <<= 1
+            sleep(self.period)
+            self.write_CS(1)
 
 if __name__ == "__main__":
-    seg = Bang(board.D15)
+    seg = Bang(board.CE0)
     for i in range(110):
-        seg.updateDisplay(i)
+        seg.sendOne(i)
+        print(i)
+        sleep(1)            

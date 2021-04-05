@@ -4,7 +4,8 @@ import digitalio
 from time import sleep
 class max:
     def __init__(self):
-        cs = digitalio.DigitalInOut(board.D6)
+        cs = digitalio.DigitalInOut(board.D8)
+
 
         spi = board.SPI()
         self.display = bcddigits.BCDDigits(spi, cs, nDigits=8)
@@ -22,9 +23,8 @@ class max:
 
 if __name__ =="__main__":
     seg =max()
-    for i in range(10):
+    for i in range(110):
         seg.clear()
         seg.updateDisplay(i)
         print(i)
-        input()
-        
+        sleep(1)

@@ -1,32 +1,23 @@
-from datetime import datetime
+import jetson.utils
+import dlib
+import numpy as np
+from database import Database
+import max7219
+from vehicleDetect import Vehicle
+from pointTracker import pointTracker
+from commentjson import load
 from threading import Thread
 from time import strftime
+import rfid
 
-from commentjson import load
-from numpy.core.numeric import False_
+rf = rfid.rfid()
 
-from pointTracker import pointTracker
-from vehicleDetect import Vehicle
-from sevenSeg import sevenseg
-import max7219
-from database import Database
-
-import numpy as np
-import dlib
-import jetson.inference
-import jetson.utils
-
-# set up Database
-db = Database()
 GARAGE = "Schrank"
-count = db.getCurrentCount(GARAGE)
+# set up Database
+db = Database(GARAGE)
 
-# set up 7 seg
-bigboard = False
-if bigboard:
-    seg = sevenseg()
-else:
-    seg=max7219.max()
+#set up 7seg
+seg = max7219.max()
 seg.clear()
 
 # Tracked vehicles and corresponding classID
@@ -43,7 +34,7 @@ with open("config.json") as conf:
 videoIn = "csi://0"
 videoInArgs = ["--input-flip=rotate-180"]
 date = strftime("%m%d%y")
-time= strftime("%H%M%S")
+time = strftime("%H%M%S")
 if RECORD:
     videoOut = f"./video/video-{date}-{time}.mp4"
 else:
@@ -52,12 +43,14 @@ neuralnet = "ssd-mobilenet-v2"
 overlay = "box,labels,conf"
 threshold = 0.5
 
-# load the object detection network
-net = jetson.inference.detectNet(neuralnet, threshold=threshold)
 
 # create video sources & outputs
 input = jetson.utils.videoSource(videoIn, videoInArgs)
 output = jetson.utils.videoOutput(videoOut)
+
+# load the object detection network
+import jetson.inference
+net = jetson.inference.detectNet(neuralnet, threshold=threshold)
 
 # set up point tracking
 pt = pointTracker(
@@ -65,32 +58,17 @@ pt = pointTracker(
 trackers = []
 trackedVehicles = {}
 
-# set up logging
-logPath = f"./logs/{date}.log"
-logging = False
-
 tracked_frames = 0
+count=db.count
 seg.updateDisplay(count)
 # process frames until the user exits
 while True:
-    #seg.updateDisplay(count)    
-
-    # if TEST:
-    #     miniseg.write(count)
-    # else:
-    #     seg.updateDisplay(count)
-
     # capture the next image
     img = input.Capture()
     npimg = jetson.utils.cudaToNumpy(img)
     # if image not captured, something went wrong
     if img is None:
         break
-    
-    if logging is False:
-        with open(logPath, 'w') as log:
-                log.write("Year, Month, Day,        Time, Direction, Avail. Spaces\n")
-        logging = True
 
     # resize image (NOTE: necessary?)
     #img = imutils.resize(img, width=config["frame_width"])
@@ -108,7 +86,6 @@ while True:
 
         for detection in detections:
             confidence = detection.Confidence
-            # centerPoint = detection.Center
 
             if confidence < config["confidence"]:
                 continue
@@ -117,7 +94,8 @@ while True:
                 continue
 
             tracker = dlib.correlation_tracker()
-            minX, minY, maxX, maxY = int(detection.Left), int(detection.Top), int(detection.Right), int(detection.Bottom)
+            minX, minY, maxX, maxY = int(detection.Left), int(
+                detection.Top), int(detection.Right), int(detection.Bottom)
             bounds = dlib.rectangle(minX, minY, maxX, maxY)
             tracker.start_track(npimg, bounds)
             # add detected vehicle to trackers
@@ -147,6 +125,7 @@ while True:
 
         if vehicle is None:
             vehicle = Vehicle(pointID, centerPoint)
+            
         elif not vehicle.tracked:
             if vehicle.direction is None:
                 y = [p[0] for p in vehicle.points]
@@ -154,14 +133,25 @@ while True:
                 # NOTE: Make sure direction is correct, otherwise flip gt to lt
                 if direction > 0:
                     vehicle.direction = "EXIT"
-                    count = db.IncDatabase(GARAGE)
+                    count+=1
+                    inc = Thread(target=db.IncDatabase)
+                    inc.start()
                 elif direction < 0:
                     vehicle.direction = "ENTER"
-                    count = db.DecDatabase(GARAGE)
-                with open(logPath, 'a') as log:
-                    log.write(f"{strftime('%Y,   %b,  %d, %I:%M:%S %p')},      {vehicle.direction},     {count}\n")
+                    count-=1
+                    rfdetect = Thread(target=rf.waitForTag,args=(0x5555,))
+                    rfdetect.start()
+                    dec = Thread(target=db.DecDatabase)
+                    dec.start()
+                
+                update = Thread(target=seg.updateDisplay,args=(count,))
+                update.start()
+                # rfdetect = Thread(target=rf.waitForTag(0x5555))
+                # rfdetect.start()
+
                 vehicle.tracked = True
-            seg.updateDisplay(count)
+            
+
         trackedVehicles[pointID] = vehicle
 
     output.Render(img)
@@ -171,8 +161,8 @@ while True:
         neuralnet, net.GetNetworkFPS()))
 
     # print out performance info
-    #net.PrintProfilerTimes()
-
+    # net.PrintProfilerTimes()
+    
     # exit on input/output EOS
     if not input.IsStreaming() or not output.IsStreaming():
         break

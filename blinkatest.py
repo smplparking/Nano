@@ -1,19 +1,16 @@
 import board
 import digitalio
 import busio
-
-print("Hello blinka!")
-
-# Try to great a Digital input
-pin = digitalio.DigitalInOut(board.D4)
+print("hello blinka!")
+print("board contents: ", dir(board))
+pin = digitalio.DigitalInOut(board.D4.OUT)
 print("Digital IO ok!")
 
-# Try to create an I2C device
 i2c = busio.I2C(board.SCL, board.SDA)
-print("I2C 1 ok!")
+print("I2C ok!")
 i2c = busio.I2C(board.SCL_1, board.SDA_1)
-print("I2C 2 ok!")
-spi= busio.SPI(board.SCK,board.MOSI,board.MISO)
+print("I2C_1 ok!")
+
+spi = busio.SPI(board.SCLK, board.MOSI, board.MISO)
 print("SPI ok!")
-spi.write(0x00)
 print("done!")

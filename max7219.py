@@ -16,9 +16,12 @@ class max:
         self.display.clear_all()
 
     def updateDisplay(self,num : int):
+        print("updating display")
         self.clear()
+        if num>99 :
+            num=99.0
         #self.display.show_str(0,"{:8}".format(num))
-        self.display.show_str(4,"{:1}".format(num))
+        self.display.show_str(4,"{:2}".format(num))
         self.display.show()
 
 if __name__ =="__main__":

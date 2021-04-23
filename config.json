@@ -11,7 +11,7 @@
 	// detection
 	"tracking_frames": 4,
 	// minimum confidence
-	"confidence": 0.4,
+	"confidence": 0.3,
 	// frame width in pixels
 	"frame_width": 400,
 	// dictionary holding the different speed estimation columns
